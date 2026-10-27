@@ -1,0 +1,77 @@
+[package]
+name = "newrelic-rust-agent"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "Apache-2.0"
+description = "Native New Relic APM agent for Rust: transactions, distributed tracing, errors, logs, via tracing and tower"
+readme = "README.md"
+documentation = "https://docs.rs/newrelic-rust-agent"
+keywords = ["newrelic", "apm", "tracing", "observability", "telemetry"]
+categories = ["development-tools::profiling", "web-programming"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+async-trait = { version = "0.1.92", optional = true }
+axum = { version = "0.8.9", default-features = false, features = ["matched-path"], optional = true }
+base64 = "0.23.1"
+flate2 = "1.1.10"
+gethostname = "1.1.0"
+http = "1.5.0"
+http-body = { version = "1.1.0", optional = true }
+pin-project-lite = { version = "0.2.17", optional = true }
+rand = "0.10.3"
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "http2"] }
+reqwest-middleware = { version = "0.5.2", optional = true }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tokio = { version = "1.54.1", features = ["rt", "time", "sync", "macros"] }
+tower-layer = { version = "0.3.3", optional = true }
+tower-service = { version = "0.3.3", optional = true }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["registry", "std"], optional = true }
+
+[features]
+default = ["tracing"]
+## `tracing_subscriber::Layer` turning spans into transactions/segments and forwarding logs.
+tracing = ["dep:tracing-subscriber"]
+## tower `Layer` creating a web transaction per HTTP / gRPC request (works for tonic).
+tower = ["dep:tower-layer", "dep:tower-service", "dep:http-body", "dep:pin-project-lite"]
+## axum route-template naming (`GET /users/{id}`) for the tower layer.
+axum = ["tower", "dep:axum"]
+## `reqwest-middleware` middleware for External segments and outbound distributed tracing.
+reqwest = ["dep:reqwest-middleware", "dep:async-trait"]
+
+[dev-dependencies]
+axum = "0.8.9"
+bytes = "1.12.1"
+futures-util = "0.3.34"
+http-body = "1.1.0"
+http-body-util = "0.1.5"
+reqwest-middleware = "0.5.2"
+tokio = { version = "1.54.1", features = ["full"] }
+tower = { version = "0.5.3", features = ["util"] }
+tracing-subscriber = { version = "0.3.23", features = ["registry", "fmt", "env-filter"] }
+wiremock = "0.6.5"
+
+[lints.rust]
+missing_docs = "deny"
+unsafe_code = "deny"
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(docsrs)"] }
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+
+[[example]]
+name = "axum"
+required-features = ["axum", "tracing", "reqwest"]
+
+[[example]]
+name = "background_job"
